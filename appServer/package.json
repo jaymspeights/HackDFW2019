@@ -1,0 +1,21 @@
+{
+  "name": "appserver",
+  "version": "1.0.0",
+  "description": "Control Server for the main app",
+  "main": "AppServer.js",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.4",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "HackDFW2019"
+  },
+  "author": "Mohit Bhole",
+  "license": "ISC"
+}
