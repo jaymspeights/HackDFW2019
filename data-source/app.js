@@ -15,6 +15,7 @@ app.get('/',function (req,res) {
 
 app.post('/', function(req,resp){
     console.log("Post called")
+    req.body.time = new Date().getTime();
     console.log(req.body);
     let response = { text: 'Message Received'}
     resp.send(response);
