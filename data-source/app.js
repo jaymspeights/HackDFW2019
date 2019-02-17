@@ -10,7 +10,7 @@ let base64Img = require('base64-img');
 app.use(bodyParser.urlencoded({paramaterLimit:1000000, limit:'50mb', extended: true}));
 app.use(bodyParser.json({limit:'50mb', type:'application/json', extended: true}));
 
-var controlIP = "http://192.168.1.7:8000/"
+var controlIP = "http://localhost:8000/"
 var messageStorage = [];
 let message_nonce = 0
 
@@ -67,7 +67,7 @@ app.post('/newPost', function(req,res){
     let data = {...req.body, timestamp: new Date().getTime(), votes: 0};
     base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${data.timestamp}-${message_nonce++}`, function(err, filepath) {
         console.log(filepath)
-        data.img = 'http://192.168.43.156:3000/'+filepath;
+        data.img = 'http://52.90.56.155:3000/'+filepath;
         messageStorage.push(data);
         res.send("success");
     });
