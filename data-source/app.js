@@ -39,12 +39,9 @@ app.get('/',function (req,res) {
     console.log("Get is called")
     console.log(req.body)
     
-    var show = calculateValues(req.location, messageStorage, (newlist)=>{
-        var relList = newlist;
+    var show = calculateInfluenceRadii(req.location, messageStorage, (newlist)=>{
+        res.send(newlist)
     });
-    sendPosts(message, (resp) => {
-        res.send(resp);
-      });
 });
 
 app.post('/', function(req,resp){
