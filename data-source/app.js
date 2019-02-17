@@ -6,27 +6,37 @@ const app = express();
 let base64Img = require('base64-img');
 
 
+var authChecker = function (req,res,next){
+    var head = req.headers;
+    if(users[req.body.username])
+    {
+        if(users[req.body.username].password===req.body.password)
+            res.send();
+    }
+    else{
+        let error;
+        error.code = "400";
+        error.message = "Bad Request. User does not exist";
+        res.send(error);
+        return;
+    }
+    next();
+}
+
 
 app.use(bodyParser.urlencoded({paramaterLimit:1000000, limit:'50mb', extended: true}));
 app.use(bodyParser.json({limit:'50mb', type:'application/json', extended: true}));
+app.use(authChecker);
 
 var controlIP = "http://localhost:8000/"
 var messageStorage = [];
-let message_nonce = 0
+let message_nonce = 0;
+var users = {};
 
 function getRadius(post){
-      var timeDelta = post.timestamp - new Date().getTime();
+      var timeDelta = new Date().getTime() - post.timestamp;
 
-      return (((120000-timeDelta)/240000)+(post.votes)/20)*0.001                         //after 120 seconds, post is deleted if there's no upvotes
-      //if there are upvotes, 10 upvotes will make the circle as big as what it was when the message was posted.
-    //   if(radiusnew<0 || timeDelta>604800){
-    //       continue;
-    //   }
-    //   else {
-    //     post.radius = radiusnew;
-    //   }
-
-      
+      return (((600000-timeDelta)/1200000)+(post.votes)/20)*0.001     
 }
 
 function isWithinRadius(post, radius, currLoc) {
@@ -65,14 +75,45 @@ app.get('/getMessages',function (req,res) {
 app.post('/newPost', function(req,res){
     console.log("Post called")
     let data = {...req.body, timestamp: new Date().getTime(), votes: 0};
-    base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${data.timestamp}-${message_nonce++}`, function(err, filepath) {
+    let id = `${data.timestamp}-${message_nonce++}`
+    base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${id}`, function(err, filepath) {
         console.log(filepath)
         data.img = 'http://52.90.56.155:3000/'+filepath;
+        data.id = id;
         messageStorage.push(data);
         res.send("success");
     });
     
 });
+
+app.post('/createuser', function(req,res){
+    if(users[req.body.username])
+    {
+        let error;
+        error.code = "400";
+        error.message = "Bad Request. User already exists"
+        res.send(error);
+    }
+    else{
+        users[req.body.username].password = req.body.password;
+    }
+})
+
+app.post('/user', function(req,res){
+    if(users[req.body.username])
+    {
+        if(users[req.body.username].password===req.body.password)
+            res.send();
+    }
+    else{
+        let error;
+        error.code = "400";
+        error.message = "Bad Request. User does not exist";
+        res.send(error);
+        return;
+    }
+})
+
 
 const port = 3000;
 app.listen(port,() => console.log("Server running on port "+port))

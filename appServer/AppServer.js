@@ -45,6 +45,23 @@ function sendMessage(messageData, cb){
         console.log(error);
     }
   }
+  ); 
+}
+
+function userAuth(messageData,tag, cb){
+  let data;
+  request.post({
+    url: dataSourceServerIp+'/'+tag+'/',
+    json: true,
+    body: messageData}
+    , function(error, res, body) {
+    if (!error) {
+      data = res.body;
+      cb(data);
+    } else {
+        console.log(error);
+    }
+  }
   );
   
 }
@@ -72,5 +89,19 @@ app.get('/getMessages', function (req, response) {
 })
 
 
+app.post('/login', function(req,res){
+  let message = req.body;
+  userAuth(message,"user",(resp)=>{
+    res.send(resp.body);
+  })
+    
+})
+
+app.post('/createuser',function(req,res){
+  let message = req.body;
+  userAuth(message,"createuser",(resp)=>{
+    res.send(resp.body);
+  })
+})
 
 app.listen(port, () => console.log('Listening on port ' + port))
