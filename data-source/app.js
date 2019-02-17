@@ -143,7 +143,8 @@ function getRadius(post){
 }
 
 function isWithinRadius(post, radius, currLoc) {
-    return convertRadius(currLoc.latitude,currLoc.longitude,post.location.latitude,post.location.longitude) <= convertRadius(radius + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
+    console.log(convertRadius(+currLoc.latitude,+currLoc.longitude,+post.location.latitude,+post.location.longitude) <= convertRadius(+radius + +post.location.latitude,+post.location.longitude,+post.location.latitude,+post.location.longitude));
+    return convertRadius(+currLoc.latitude,+currLoc.longitude,+post.location.latitude,+post.location.longitude) <= convertRadius(+radius + +post.location.latitude,+post.location.longitude,+post.location.latitude,+post.location.longitude);
 }
 
 app.use('/img/',express.static(__dirname + '/img/'));
@@ -151,6 +152,7 @@ app.use('/img/',express.static(__dirname + '/img/'));
 app.get('/getMessages',function (req,res) {
     list = []
     for (let i = 0; i < messageStorage.length; i++) {
+        console.log(i);
         if (req.query.timestamp && req.query.timestamp < messageStorage[i].timestamp)
             continue
         let radius = getRadius(messageStorage[i])
@@ -159,7 +161,7 @@ app.get('/getMessages',function (req,res) {
             i -= 1;
             continue;
         } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
-            messageStorage[i].radius = convertRadius(rad + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
+            messageStorage[i].radius = convertRadius(radius + +messageStorage[i].location.latitude,+messageStorage[i].location.longitude,+messageStorage[i].location.latitude,+messageStorage[i].location.longitude);
             list.unshift(messageStorage[i])
             if (!req.query.num || list.length >= +req.query.num) {
                 res.send(list)
