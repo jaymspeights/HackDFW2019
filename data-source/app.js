@@ -6,40 +6,50 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 var controlIP = "http://192.168.43.104:8000/"
-var messageStorage;
+var messageStorage = [];
+
 
 app.get('/',function (req,res) {
-    console.log("Get called")
+    console.log("Get is called")
     console.log(req.body)
+    
+    var show = calculateValues(req.location, messageStorage, (newlist)=>{
+        messageStorage = newlist;
+    });
+    sendPosts(message, (resp) => {
+        res.send(resp);
+      });
 });
 
 app.post('/', function(req,resp){
     console.log("Post called")
     req.body.time = new Date().getTime();
-    console.log(req.body);
+    messageStorage.push(req.body);
     let response = { text: 'Message Received'}
     resp.send(response);
 });
 
-function sendUpdate(messageData){
+function sendPosts(messageData, cb){
+    let data;
+    
     request.post({
-      url: controlIp,
+      url: dataSourceServerIp,
       json: true,
-      body: messageData, function(error, response, body) {
+      body: messageData}
+      , function(error, res, body) {
       if (!error) {
-          response.write(response.statusCode);
+        data = res.body;
+        cb(data);
       } else {
-          response.write(error);
+          console.log(error);
       }
-      response.end();
     }
-    });
-   }
-
-function sendInfo()
-{
-    request.post()
-}
+    );
+    
+  }
 
 const port = 3000;
 app.listen(port,() => console.log("Server running on port "+port))
+
+
+console.log(messageStorage+"1232");
