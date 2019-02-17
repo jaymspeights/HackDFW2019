@@ -31,11 +31,18 @@ function getRadius(post){
 
 function isWithinRadius(post, radius, currLoc) {
     
+<<<<<<< HEAD
     console.log("Radius: "+radius+" , Distance: "+Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5))
     console.log(Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius)
     console.log(currLoc,post.location)
     return Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius
 }
+=======
+    var show = calculateInfluenceRadii(req.location, messageStorage, (newlist)=>{
+        res.send(newlist)
+    });
+});
+>>>>>>> refs/remotes/origin/data-source
 
 app.use('/img/',express.static(__dirname + '/img/'));
 
