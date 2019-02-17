@@ -102,6 +102,7 @@ app.post('/login', function(req,res){
 
 app.post('/postMessage', function(req,res){
   console.log(req.body.img.length);
+  req.body.username = req.username;
   sendMessage('/newPost/',req, (resp) => {
     res.send(resp);
   });
@@ -121,13 +122,17 @@ app.get('/getMessages', function (req, response) {
   );
 })
 
-// app.post('/getMyMessages', function(req,response){
-//   sendMessage('/userMessages', req, (resp) => {
-//     response.send(resp);
-//   })
-// })
+app.post('/getMyMessages', function(req,response){
+  sendMessage('/userMessages', {body:{username:req.username}}, (resp) => {
+    response.send(resp);
+  })
+})
 
-
-
+app.post('/postVote', function(req,response){
+  req.body.username = req.username;
+  sendMessage('/updateVote', req, (resp) => {
+    response.send(resp);
+  })
+})
 
 app.listen(port, () => console.log('Listening on port ' + port))

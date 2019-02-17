@@ -31,11 +31,77 @@ app.post('/createUser', function(req,res){
         users[req.body.username]= {};
         users[req.body.username].username = req.body.username;
         users[req.body.username].password = req.body.password;
-        users[req.body.username].posts = []
+        users[req.body.username].messages = []
         users[req.body.username].voted = []
         console.log("Created User")
         res.send(200);
     }
+})
+
+app.post('/userMessages', function(req,res){
+    let list = [];
+    for(i =0;i<users[req.body.username].messages.length;i++){
+        for(let j=0;j<messageStorage.length;j++){
+            if(messageStorage[j].id == users[req.body.username].messages[i]){
+                rad = getRadius(messageStorage[j]);
+                messageStorage[j].radius = rad;
+                list.push(messageStorage[j]);
+            }
+        }
+    }
+    res.send(list);
+})
+
+app.post('/updateVote', function(req,res){
+    let list = [];
+
+    users[req.body.username].voted.postID = req.body.postID
+    if(!users[req.body.username].voted.voted)
+    {
+        users[req.body.username].voted.voted=0;
+    }
+    var previouslyVoted = users[req.body.username].voted.voted
+    console.log("previous to previous: "+previouslyVoted)
+    users[req.body.username].voted.voted = req.body.voted
+
+    for(let j=0;j<messageStorage.length;j++){
+        // messageStorage[j].votes = +messageStorage[j].votes + 1;
+        // console.log(messageStorage[j].votes);
+        if(messageStorage[j].id == req.body.postID){
+            console.log("prev: "+previouslyVoted+" new: "+req.body.voted)
+            if(previouslyVoted==req.body.voted)
+            {
+                //messageStorage[j].votes += +req.body.voted
+            }
+            else if(previouslyVoted==1&&req.body.voted==0)
+            {
+                messageStorage[j].votes = +messageStorage[j].votes - 1;
+            }
+            else if(previouslyVoted==1&&req.body.voted==-1)
+            {
+                messageStorage[j].votes = +messageStorage[j].votes - 2;
+            }
+            else if(previouslyVoted==0&&req.body.voted==1)
+            {
+                messageStorage[j].votes = +messageStorage[j].votes + 1;
+            }
+            else if(previouslyVoted==0&&req.body.voted==-1)
+            {
+                messageStorage[j].votes = +messageStorage[j].votes - 1;
+            }
+            else if(previouslyVoted==-1&&req.body.voted==0)
+            {
+                messageStorage[j].votes = +messageStorage[j].votes + 1;
+            }
+            else if(previouslyVoted==-1&&req.body.voted==1)
+            {
+                mmessageStorage[j].votes = +messageStorage[j].votes + 2;
+            }
+
+        }
+
+    }
+    res.send("done");
 })
 
 
@@ -90,6 +156,7 @@ app.get('/getMessages',function (req,res) {
             i -= 1;
             continue;
         } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
+            messageStorage[i].radius = radius;
             list.push(messageStorage[i])
             if (!req.query.num || list.length >= +req.query.num) {
                 res.send(list)
@@ -107,10 +174,12 @@ app.post('/newPost', function(req,res){
     let id = `${data.timestamp}-${message_nonce++}`
     base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${id}`, function(err, filepath) {
         console.log(filepath)
-        data.img = 'localhost:3000/'+filepath;
+        data.img = 'http://52.90.56.155:3000/'+filepath; //change to localhost if testing locally
         //http://52.90.56.155
         data.id = id;
         messageStorage.push(data);
+        console.log(data.username)
+        users[data.username].messages.push(id)
         res.send("success");
     });
     
