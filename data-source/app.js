@@ -143,7 +143,7 @@ function getRadius(post){
 }
 
 function isWithinRadius(post, radius, currLoc) {
-    return convertRadius(currLoc.latitude,currLoc.longitude,post.location.latitude,post.location.longitude) <= convertRadius(rad + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
+    return convertRadius(currLoc.latitude,currLoc.longitude,post.location.latitude,post.location.longitude) <= convertRadius(radius + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
 }
 
 app.use('/img/',express.static(__dirname + '/img/'));
