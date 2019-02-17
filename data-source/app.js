@@ -19,7 +19,6 @@ app.post('/auth', function (req, res) {
 });
 
 app.post('/createUser', function(req,res){
-    console.log(req.body)
     if(users[req.body.username])
     {
         let error = {};
@@ -33,7 +32,6 @@ app.post('/createUser', function(req,res){
         users[req.body.username].password = req.body.password;
         users[req.body.username].messages = []
         users[req.body.username].voted = []
-        console.log("Created User")
         res.send(200);
     }
 })
@@ -43,9 +41,9 @@ app.post('/userMessages', function(req,res){
     for(i =0;i<users[req.body.username].messages.length;i++){
         for(let j=0;j<messageStorage.length;j++){
             if(messageStorage[j].id == users[req.body.username].messages[i]){
-                rad = getRadius(messageStorage[j]);
-                messageStorage[j].radius = convertRadius(messageStorage[i].latitude+radius,messageStorage[i].longitude,messageStorage[i].latitude,messageStorage[i].longitude);
-                list.push(messageStorage[j]);
+                rad = +getRadius(messageStorage[j]);
+                messageStorage[j].radius = convertRadius(rad + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
+                list.unshift(messageStorage[j]);
             }
         }
     }
@@ -61,14 +59,12 @@ app.post('/updateVote', function(req,res){
         users[req.body.username].voted.voted=0;
     }
     var previouslyVoted = users[req.body.username].voted.voted
-    console.log("previous to previous: "+previouslyVoted)
     users[req.body.username].voted.voted = req.body.voted
 
     for(let j=0;j<messageStorage.length;j++){
         // messageStorage[j].votes = +messageStorage[j].votes + 1;
         // console.log(messageStorage[j].votes);
         if(messageStorage[j].id == req.body.postID){
-            console.log("prev: "+previouslyVoted+" new: "+req.body.voted)
             if(previouslyVoted==req.body.voted)
             {
                 //messageStorage[j].votes += +req.body.voted
@@ -147,17 +143,12 @@ function getRadius(post){
 }
 
 function isWithinRadius(post, radius, currLoc) {
-    
-    console.log("Radius: "+radius+" , Distance: "+Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5))
-    console.log(Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius)
-    console.log(currLoc,post.location)
-    return Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius
+    return convertRadius(currLoc.latitude,currLoc.longitude,post.location.latitude,post.location.longitude) <= convertRadius(rad + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
 }
 
 app.use('/img/',express.static(__dirname + '/img/'));
 
 app.get('/getMessages',function (req,res) {
-    console.log(req.query)
     list = []
     for (let i = 0; i < messageStorage.length; i++) {
         if (req.query.timestamp && req.query.timestamp < messageStorage[i].timestamp)
@@ -168,8 +159,8 @@ app.get('/getMessages',function (req,res) {
             i -= 1;
             continue;
         } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
-            messageStorage[i].radius = convertRadius(messageStorage[i].latitude+radius,messageStorage[i].longitude,messageStorage[i].latitude,messageStorage[i].longitude);
-            list.push(messageStorage[i])
+            messageStorage[i].radius = convertRadius(rad + +messageStorage[j].location.latitude,+messageStorage[j].location.longitude,+messageStorage[j].location.latitude,+messageStorage[j].location.longitude);
+            list.unshift(messageStorage[i])
             if (!req.query.num || list.length >= +req.query.num) {
                 res.send(list)
                 return
@@ -181,17 +172,14 @@ app.get('/getMessages',function (req,res) {
 });
 
 app.post('/newPost', function(req,res){
-    console.log("Post called")
     let data = {...req.body, timestamp: new Date().getTime(), votes: 0};
     let id = `${data.timestamp}-${message_nonce++}`
     base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${id}`, function(err, filepath) {
-        console.log(filepath)
         data.img = 'http://52.90.56.155:3000/'+filepath; //change to localhost if testing locally
         //http://52.90.56.155
         data.id = id;
-        messageStorage.push(data);
-        console.log(data.username)
-        users[data.username].messages.push(id)
+        messageStorage.unshift(data);
+        users[data.username].messages.unshift(id)
         res.send("success");
     });
     

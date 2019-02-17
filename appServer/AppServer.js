@@ -52,7 +52,6 @@ function sendMessage(path, messageData,cb){
 
 function userAuth(messageData,tag, cb){
   let data;
-  console.log(messageData)
   request.post({
     url: dataSourceServerIp+'/'+tag+'/',
     json: true,
@@ -101,7 +100,6 @@ app.post('/login', function(req,res){
 })
 
 app.post('/postMessage', function(req,res){
-  console.log(req.body.img.length);
   req.body.username = req.username;
   sendMessage('/newPost/',req, (resp) => {
     res.send(resp);
