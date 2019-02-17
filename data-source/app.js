@@ -44,7 +44,7 @@ app.post('/userMessages', function(req,res){
         for(let j=0;j<messageStorage.length;j++){
             if(messageStorage[j].id == users[req.body.username].messages[i]){
                 rad = getRadius(messageStorage[j]);
-                messageStorage[j].radius = convertRadius(rad,0,0,0);
+                messageStorage[j].radius = convertRadius(messageStorage[i].latitude+radius,messageStorage[i].longitude,messageStorage[i].latitude,messageStorage[i].longitude);
                 list.push(messageStorage[j]);
             }
         }
@@ -168,7 +168,7 @@ app.get('/getMessages',function (req,res) {
             i -= 1;
             continue;
         } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
-            messageStorage[i].radius = convertRadius(radius,0,0,0);
+            messageStorage[i].radius = convertRadius(messageStorage[i].latitude+radius,messageStorage[i].longitude,messageStorage[i].latitude,messageStorage[i].longitude);
             list.push(messageStorage[i])
             if (!req.query.num || list.length >= +req.query.num) {
                 res.send(list)
