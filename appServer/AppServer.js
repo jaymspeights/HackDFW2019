@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({
 //   extended: false
 // })); 
 
-const dataSourceServerIp = 'http://192.168.1.10:3000';
+const dataSourceServerIp = 'http://localhost:3000';
 
 function sendMessage(messageData, cb){
   let data;
