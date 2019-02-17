@@ -116,14 +116,13 @@ app.get('/getMessages', function (req, response) {
     if(error) {
         console.log(error);
     }
-    console.log(res.body);
     response.send(res);
   }
   );
 })
 
-app.post('/getMyMessages', function(req,response){
-  sendMessage('/userMessages', {body:{username:req.username}}, (resp) => {
+app.get('/getMyMessages', function(req,response){
+  sendMessage('/userMessages', {body:{username:req.query.username}}, (resp) => {
     response.send(resp);
   })
 })
