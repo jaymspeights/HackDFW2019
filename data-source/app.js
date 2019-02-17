@@ -8,13 +8,39 @@ app.use(bodyParser.json());
 var controlIP = "http://192.168.43.104:8000/"
 var messageStorage = [];
 
+function calculateInfluenceRadii(currLoc, messages, nl){
+  var i=0;
+  while(messages[i] != null){
+      var radiusnew;
+      var timeDelta = messages[i].time - new Date().getTime();
+      var newlist;
 
+  
+      radiusnew = (((120-timeDelta)/240)+(messages[i].upvotes)/20)*0.001                         //after 120 seconds, post is deleted if there's no upvotes
+      //if there are upvotes, 10 upvotes will make the circle as big as what it was when the message was posted.
+      if(radiusnew<0 || timeDelta>604800){
+          messages.slice(i,1);
+          i--;
+          continue;
+      }
+      else{
+      messages[i].radius = radiusnew;
+      }
+
+      if(Math.pow(Math.pow((currLoc.latitude-messages[i].position.latitude),2)+Math.pow((currLoc.longitude-messages[i].position.longitude),2),0.5) <= radiusnew){
+          newlist.push(messages[i]);
+      }
+      i++;
+  }
+
+  nl(newlist);
+}
 app.get('/',function (req,res) {
     console.log("Get is called")
     console.log(req.body)
     
     var show = calculateValues(req.location, messageStorage, (newlist)=>{
-        messageStorage = newlist;
+        var relList = newlist;
     });
     sendPosts(message, (resp) => {
         res.send(resp);
