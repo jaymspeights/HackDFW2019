@@ -44,7 +44,7 @@ app.post('/userMessages', function(req,res){
         for(let j=0;j<messageStorage.length;j++){
             if(messageStorage[j].id == users[req.body.username].messages[i]){
                 rad = getRadius(messageStorage[j]);
-                messageStorage[j].radius = rad;
+                messageStorage[j].radius = convertRadius(rad,0,0,0);
                 list.push(messageStorage[j]);
             }
         }
@@ -128,10 +128,22 @@ var controlIP = "http://localhost:8000/"
 var messageStorage = [];
 let message_nonce = 0;
 
+function convertRadius(lat1, lon1, lat2, lon2){  // generally used geo measurement function
+    var R = 6378.137; // Radius of earth in KM
+    var dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+    var dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c;
+    return d * 1000; // meters
+}
+
 function getRadius(post){
       var timeDelta = new Date().getTime() - post.timestamp;
 
-      return (((600000-timeDelta)/1200000)+(post.votes)/20)*0.001     
+      return (((600000-timeDelta)/1200000)+(post.votes)/20)*0.001
 }
 
 function isWithinRadius(post, radius, currLoc) {
@@ -156,7 +168,7 @@ app.get('/getMessages',function (req,res) {
             i -= 1;
             continue;
         } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
-            messageStorage[i].radius = radius;
+            messageStorage[i].radius = convertRadius(radius,0,0,0);
             list.push(messageStorage[i])
             if (!req.query.num || list.length >= +req.query.num) {
                 res.send(list)
