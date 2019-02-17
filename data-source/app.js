@@ -2,80 +2,77 @@ var express = require("express");
 var bodyParser = require("body-parser"); //Used to parse HTTP requests
 var request = require("request")
 const app = express();
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
 
-var controlIP = "http://192.168.43.104:8000/"
+let base64Img = require('base64-img');
+
+
+
+app.use(bodyParser.urlencoded({paramaterLimit:1000000, limit:'50mb', extended: true}));
+app.use(bodyParser.json({limit:'50mb', type:'application/json', extended: true}));
+
+var controlIP = "http://192.168.1.7:8000/"
 var messageStorage = [];
+let message_nonce = 0
 
-function calculateInfluenceRadii(currLoc, messages, nl){
-  var i=0;
-  while(messages[i] != null){
-      var radiusnew;
-      var timeDelta = messages[i].time - new Date().getTime();
-      var newlist;
+function getRadius(post){
+      var timeDelta = post.timestamp - new Date().getTime();
 
-  
-      radiusnew = (((120-timeDelta)/240)+(messages[i].upvotes)/20)*0.001                         //after 120 seconds, post is deleted if there's no upvotes
+      return (((120000-timeDelta)/240000)+(post.votes)/20)*0.001                         //after 120 seconds, post is deleted if there's no upvotes
       //if there are upvotes, 10 upvotes will make the circle as big as what it was when the message was posted.
-      if(radiusnew<0 || timeDelta>604800){
-          messages.slice(i,1);
-          i--;
-          continue;
-      }
-      else{
-      messages[i].radius = radiusnew;
-      }
+    //   if(radiusnew<0 || timeDelta>604800){
+    //       continue;
+    //   }
+    //   else {
+    //     post.radius = radiusnew;
+    //   }
 
-      if(Math.pow(Math.pow((currLoc.latitude-messages[i].position.latitude),2)+Math.pow((currLoc.longitude-messages[i].position.longitude),2),0.5) <= radiusnew){
-          newlist.push(messages[i]);
-      }
-      i++;
-  }
-
-  nl(newlist);
+      
 }
-app.get('/',function (req,res) {
-    console.log("Get is called")
-    console.log(req.body)
-    
-    var show = calculateValues(req.location, messageStorage, (newlist)=>{
-        var relList = newlist;
-    });
-    sendPosts(message, (resp) => {
-        res.send(resp);
-      });
-});
 
-app.post('/', function(req,resp){
-    console.log("Post called")
-    req.body.time = new Date().getTime();
-    messageStorage.push(req.body);
-    let response = { text: 'Message Received'}
-    resp.send(response);
-});
-
-function sendPosts(messageData, cb){
-    let data;
+function isWithinRadius(post, radius, currLoc) {
     
-    request.post({
-      url: dataSourceServerIp,
-      json: true,
-      body: messageData}
-      , function(error, res, body) {
-      if (!error) {
-        data = res.body;
-        cb(data);
-      } else {
-          console.log(error);
-      }
+    console.log("Radius: "+radius+" , Distance: "+Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5))
+    console.log(Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius)
+    console.log(currLoc,post.location)
+    return Math.pow(Math.pow((currLoc.latitude-post.location.latitude),2)+Math.pow((currLoc.longitude-post.location.longitude),2),0.5) <= radius
+}
+
+app.use('/img/',express.static(__dirname + '/img/'));
+
+app.get('/getMessages',function (req,res) {
+    console.log(req.query)
+    list = []
+    for (let i = 0; i < messageStorage.length; i++) {
+        if (req.query.timestamp && req.query.timestamp < messageStorage[i].timestamp)
+            continue
+        let radius = getRadius(messageStorage[i])
+        if (radius < 0) {
+            messageStorage.splice(i, 1);
+            i -= 1;
+            continue;
+        } else if (isWithinRadius(messageStorage[i], radius, {latitude:req.query.latitude, longitude:req.query.longitude})) {
+            list.push(messageStorage[i])
+            if (!req.query.num || list.length >= +req.query.num) {
+                res.send(list)
+                return
+            }
+        }
     }
-    );
+
+    res.send(list)
+});
+
+app.post('/newPost', function(req,res){
+    console.log("Post called")
+    let data = {...req.body, timestamp: new Date().getTime(), votes: 0};
+    base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${data.timestamp}-${message_nonce++}`, function(err, filepath) {
+        console.log(filepath)
+        data.img = 'http://192.168.43.156:3000/'+filepath;
+        messageStorage.push(data);
+        res.send("success");
+    });
     
-  }
+});
 
 const port = 3000;
 app.listen(port,() => console.log("Server running on port "+port))
-
-
-console.log(messageStorage+"1232");
