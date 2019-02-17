@@ -4,34 +4,63 @@ var request = require("request")
 const app = express();
 
 let base64Img = require('base64-img');
+var users = {};
+
+app.use(bodyParser.urlencoded({paramaterLimit:1000000, limit:'50mb', extended: true}));
+app.use(bodyParser.json({limit:'50mb', type:'application/json', extended: true}));
 
 
-var authChecker = function (req,res,next){
-    var head = req.headers;
+app.post('/auth', function (req, res) {
+    if (users[req.body.username] && users[req.body.username].password == req.body.password) {
+        res.send({username: req.body.username})
+    } else {
+        res.send({error: "Invalid Credentials."})
+    }
+});
+
+app.post('/createUser', function(req,res){
+    console.log(req.body)
+    if(users[req.body.username])
+    {
+        let error = {};
+        error.code = "400";
+        error.message = "Bad Request. User already exists"
+        res.send({error:error});
+    }
+    else{
+        users[req.body.username]= {};
+        users[req.body.username].username = req.body.username;
+        users[req.body.username].password = req.body.password;
+        users[req.body.username].posts = []
+        users[req.body.username].voted = []
+        console.log("Created User")
+        res.send(200);
+    }
+})
+
+
+app.post('/user', function(req,res){
     if(users[req.body.username])
     {
         if(users[req.body.username].password===req.body.password)
-            res.send();
+        {
+            res.send({});
+            console.log("success")
+        }
     }
     else{
-        let error;
+        console.log("There was an error")
+        let error = {};
         error.code = "400";
         error.message = "Bad Request. User does not exist";
         res.send(error);
         return;
     }
-    next();
-}
-
-
-app.use(bodyParser.urlencoded({paramaterLimit:1000000, limit:'50mb', extended: true}));
-app.use(bodyParser.json({limit:'50mb', type:'application/json', extended: true}));
-app.use(authChecker);
+})
 
 var controlIP = "http://localhost:8000/"
 var messageStorage = [];
 let message_nonce = 0;
-var users = {};
 
 function getRadius(post){
       var timeDelta = new Date().getTime() - post.timestamp;
@@ -78,7 +107,8 @@ app.post('/newPost', function(req,res){
     let id = `${data.timestamp}-${message_nonce++}`
     base64Img.img("data:image/jpeg;base64,"+data.img, 'img/', `img-${id}`, function(err, filepath) {
         console.log(filepath)
-        data.img = 'http://52.90.56.155:3000/'+filepath;
+        data.img = 'localhost:3000/'+filepath;
+        //http://52.90.56.155
         data.id = id;
         messageStorage.push(data);
         res.send("success");
@@ -86,33 +116,6 @@ app.post('/newPost', function(req,res){
     
 });
 
-app.post('/createuser', function(req,res){
-    if(users[req.body.username])
-    {
-        let error;
-        error.code = "400";
-        error.message = "Bad Request. User already exists"
-        res.send(error);
-    }
-    else{
-        users[req.body.username].password = req.body.password;
-    }
-})
-
-app.post('/user', function(req,res){
-    if(users[req.body.username])
-    {
-        if(users[req.body.username].password===req.body.password)
-            res.send();
-    }
-    else{
-        let error;
-        error.code = "400";
-        error.message = "Bad Request. User does not exist";
-        res.send(error);
-        return;
-    }
-})
 
 
 const port = 3000;

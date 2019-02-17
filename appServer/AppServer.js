@@ -30,13 +30,13 @@ app.use(bodyParser.urlencoded({
 
 const dataSourceServerIp = 'http://localhost:3000';
 
-function sendMessage(messageData, cb){
+function sendMessage(path, messageData,cb){
   let data;
   
   request.post({
-    url: dataSourceServerIp+'/newPost/',
+    url: dataSourceServerIp+path,
     json: true,
-    body: messageData}
+    body: messageData.body}
     , function(error, res, body) {
     if (!error) {
       data = res.body;
@@ -48,28 +48,61 @@ function sendMessage(messageData, cb){
   ); 
 }
 
+
+
 function userAuth(messageData,tag, cb){
   let data;
+  console.log(messageData)
   request.post({
     url: dataSourceServerIp+'/'+tag+'/',
     json: true,
     body: messageData}
     , function(error, res, body) {
-    if (!error) {
       data = res.body;
       cb(data);
-    } else {
-        console.log(error);
-    }
   }
   );
   
 }
 
-app.post('/postMessage', function(req,res){
+app.post('/createUser',function(req,response){
   let message = req.body;
-  console.log(message.img.length);
-  sendMessage(message, (resp) => {
+  userAuth(message,"createUser",(res)=>{
+    if (res.error)
+      response.send(400)
+  else
+      response.send(200);
+  })
+})
+
+//LOGIN
+app.post('/*', function (req, res, next) {
+  var head = req.headers;
+  if (!head.username || !head.password) {
+    res.send(400)
+    return
+  } else {
+    sendMessage('/auth',{body:{username:head.username, password:head.password}}, (ret) => {
+      if (ret.error) {
+        res.send(400)
+        return
+      }
+      req.username = ret.username
+      next()
+    })
+  }
+});
+
+app.post('/login', function(req,res){
+  if (req.username)
+    res.send(200)
+  else
+    res.send(400)
+})
+
+app.post('/postMessage', function(req,res){
+  console.log(req.body.img.length);
+  sendMessage('/newPost/',req, (resp) => {
     res.send(resp);
   });
 })
@@ -88,20 +121,13 @@ app.get('/getMessages', function (req, response) {
   );
 })
 
+// app.post('/getMyMessages', function(req,response){
+//   sendMessage('/userMessages', req, (resp) => {
+//     response.send(resp);
+//   })
+// })
 
-app.post('/login', function(req,res){
-  let message = req.body;
-  userAuth(message,"user",(resp)=>{
-    res.send(resp.body);
-  })
-    
-})
 
-app.post('/createuser',function(req,res){
-  let message = req.body;
-  userAuth(message,"createuser",(resp)=>{
-    res.send(resp.body);
-  })
-})
+
 
 app.listen(port, () => console.log('Listening on port ' + port))
