@@ -1,5 +1,3 @@
 #Unimportant
-appServer/node_modules
-data-source/node_modules/
-data-source/img/
+node_modules
 .idea/
