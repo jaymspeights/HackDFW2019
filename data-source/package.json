@@ -1,0 +1,16 @@
+{
+  "name": "data-source",
+  "version": "1.0.0",
+  "description": "\"Used for the source of the data for the posts\"",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jacob Hill",
+  "license": "ISC",
+  "dependencies": {
+    "base64-img": "^1.0.4",
+    "express": "^4.16.4",
+    "request": "^2.88.0"
+  }
+}
